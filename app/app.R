@@ -1,13 +1,14 @@
-# app.R
 library(shiny)
 library(tidyverse)
 library(readxl)
 library(ggsankey)
 library(shinyWidgets)
 library(flextable)
+library(shinythemes)
+options(shiny.autoreload.legacy_warning = FALSE)
 source("parse_connect_crap.R")
-# UI Definition
 ui <- fluidPage(
+  theme = shinytheme("united"),
   titlePanel("Switch Analysis Generator"),
   sidebarLayout(
     sidebarPanel(
@@ -50,17 +51,20 @@ ui <- fluidPage(
     ),
     mainPanel(
       tabsetPanel(
+        tabPanel("Tabular", uiOutput("table")),
         tabPanel(
           "Plot",
           plotOutput("sankeyPlot", height = "600px", width = "800px")
-        ),
-        tabPanel("Tabular", uiOutput("table"))
+        )
       )
     )
+  ),
+  hr(),
+  p(
+    "Hosted by Posit. Published and promoted by S Bate on behalf of ALDC all at Unit 2KLM, Beehive Mill, Jersey Street, Manchester, M4 6JG"
   )
 )
 
-# Server Logic
 server <- function(input, output) {
   base_data <- reactive({
     req(input$file1) # require file to be uploaded
@@ -105,6 +109,8 @@ server <- function(input, output) {
       ) |>
       filter(source != "Total People", target != "Total People") |>
       mutate(
+        source1 = source,
+        target1 = target,
         source = case_when(
           grepl("Lib", source) ~ "Lib Dem",
           grepl("Lab", source) ~ "Labour",
