@@ -8,6 +8,25 @@ library(shinythemes)
 options(shiny.autoreload.legacy_warning = FALSE)
 source("parse_connect_crap.R")
 ui <- fluidPage(
+  tags$head(tags$style(HTML(
+    "
+    .inline-numeric-inputs .form-group.shiny-input-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .inline-numeric-inputs .control-label {
+      flex: 0 0 100px;
+      margin-right: 5px;
+    }
+    .inline-numeric-inputs input[type='number'] {
+      flex: 1 1 auto;
+      width: auto;
+      padding: 2px 6px;
+      height: 28px;
+    }
+  "
+  ))),
   theme = shinytheme("united"),
   titlePanel("Switch Analysis Generator"),
   sidebarLayout(
@@ -17,7 +36,8 @@ ui <- fluidPage(
         "Choose switch analysis file",
         accept = c(".xlsx", ".csv", ".xls")
       ),
-      checkboxInput("raw_pc", "Equalise groups as %", value = F),
+      checkboxInput("raw_pc", "Show %/Weighted diagram", value = F),
+
       checkboxInput(
         "remove_unknowns",
         "Remove Unknowns from Recent MPID",
@@ -54,6 +74,21 @@ ui <- fluidPage(
         tabPanel("Tabular", uiOutput("table")),
         tabPanel(
           "Plot",
+          conditionalPanel(
+            "input.raw_pc == true",
+            tags$h4("Assumptions"),
+            div(
+              class = "inline-numeric-inputs",
+              numericInput("lib_dem_assumption", "Lib Dem", 1),
+              numericInput("labour_assumption", "Labour", 1),
+              numericInput("conservative_assumption", "Conservatives", 1),
+              numericInput("green_assumption", "Green", 1),
+              numericInput("reform_assumption", "Reform", 1),
+              numericInput("independent_assumption", "Independent", 1),
+              numericInput("unknown_assumption", "New voters", 1)
+            ),
+            actionButton("update_assumptions", "Update Assumptions")
+          ),
           plotOutput("sankeyPlot", height = "600px", width = "800px")
         )
       )
@@ -139,6 +174,55 @@ server <- function(input, output) {
     return(sa)
   })
 
+  assumptions_val <- reactiveVal({
+    data.frame(
+      source = c(
+        "Lib Dem",
+        "Labour",
+        "Conservative",
+        "Green",
+        "Reform",
+        "Independent",
+        "Unaligned and No Data"
+      ),
+      weight = c(1, 1, 1, 1, 1, 1, 1)
+    )
+  })
+
+  observeEvent(input$update_assumptions, {
+    req(
+      input$lib_dem_assumption,
+      input$labour_assumption,
+      input$conservative_assumption,
+      input$green_assumption,
+      input$reform_assumption,
+      input$independent_assumption,
+      input$unknown_assumption
+    )
+
+    df <- data.frame(
+      source = c(
+        "Lib Dem",
+        "Labour",
+        "Conservative",
+        "Green",
+        "Reform",
+        "Independent",
+        "Unaligned and No Data"
+      ),
+      weight = c(
+        input$lib_dem_assumption,
+        input$labour_assumption,
+        input$conservative_assumption,
+        input$green_assumption,
+        input$reform_assumption,
+        input$independent_assumption,
+        input$unknown_assumption
+      )
+    )
+    assumptions_val(df)
+  })
+
   plot_data <- reactive({
     sa <- base_data()
 
@@ -150,11 +234,14 @@ server <- function(input, output) {
 
     if (input$raw_pc) {
       sa_long <- sa |>
-        uncount(weights = as.integer(pc)) |>
+        merge(assumptions_val()) |>
+        mutate(pc = pc * weight / 10) |>
+        select(-weight) |>
+        uncount(weights = round(pc)) |>
         make_long(source, target)
     } else {
       sa_long <- sa |>
-        uncount(weights = as.integer(value)) |>
+        uncount(weights = round(value)) |>
         make_long(source, target)
     }
 
@@ -179,11 +266,12 @@ server <- function(input, output) {
     other_nodes <- setdiff(all_nodes, desired_order)
     final_order <- rev(c(desired_order, other_nodes))
 
-    sa_long |>
+    df = sa_long |>
       mutate(
         node = factor(node, levels = final_order),
         next_node = factor(next_node, levels = final_order)
       )
+    return(df)
   })
 
   output$sankeyPlot <- renderPlot(
