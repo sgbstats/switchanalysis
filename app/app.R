@@ -37,7 +37,7 @@ ui <- fluidPage(
       fileInput(
         "file1",
         "Choose switch analysis file",
-        accept = c(".xlsx", ".csv", ".xls")
+        accept = c(".xlsx", ".xls")
       ),
       checkboxInput("raw_pc", "Show %/Weighted diagram", value = F),
 
@@ -82,7 +82,7 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel(
           "Tabular",
-          checkboxInput("expand_columns", "Expand Columns", value = F),
+          checkboxInput("expand_columns", "Expand Columns", value = FALSE),
           reactableOutput("table")
         ),
         tabPanel(
@@ -103,7 +103,8 @@ ui <- fluidPage(
             actionButton("update_assumptions", "Update Assumptions")
           ),
           plotOutput("sankeyPlot", height = "600px", width = "800px")
-        )
+        ),
+        tabPanel("Debug", verbatimTextOutput("debug_text"))
       )
     )
   ),
@@ -133,7 +134,7 @@ server <- function(input, output, session) {
 
   #   updatePickerInput(session, "source_party", selected = prs)
   # })
-  base_data <- reactive({
+  base_data_raw <- reactive({
     req(input$file1) # require file to be uploaded
 
     sa_raw <- tryCatch(
@@ -155,14 +156,10 @@ server <- function(input, output, session) {
         )
       }
     )
-
-    # safe_1 = possibly(parse_connect_xlsx, otherwise = NULL)
-    # safe_2 = possibly(parse_connect_crap, otherwise = NULL)
-
-    # sa_raw = safe_1(input$file1$datapath) %||%
-    #   safe_2(input$file1$datapath) %||%
-    #   NULL
-
+    return(sa_raw)
+  })
+  base_data <- reactive({
+    sa_raw <- base_data_raw()
     if (is.null(sa_raw)) {
       return(NULL)
     }
@@ -213,8 +210,9 @@ server <- function(input, output, session) {
           TRUE ~ "Unknown"
         )
       ) |>
-      mutate(pc = round(1000 * value / sum(value)), .by = crosstabs_names) |>
-      filter(!target %in% target_remove)
+      filter(source %in% input$source_party) |>
+      filter(!target %in% target_remove) |>
+      mutate(pc = round(1000 * value / sum(value)), .by = crosstabs_names)
 
     return(sa)
   })
@@ -270,18 +268,16 @@ server <- function(input, output, session) {
 
   plot_data <- reactive({
     sa <- base_data() |>
-      summarise(value = sum(value), .by = c("source", "target"))
+      summarise(value = sum(value), pc = sum(pc), .by = c("source", "target"))
 
     if (is.null(sa)) {
       return(NULL)
     }
-    sa <- sa |>
-      filter(source %in% input$source_party)
 
     if (input$raw_pc) {
       sa_long <- sa |>
         merge(assumptions_val()) |>
-        mutate(pc = pc * weight / 10) |>
+        mutate(pc = pc * weight) |>
         select(-weight) |>
         uncount(weights = round(pc)) |>
         make_long(source, target)
@@ -365,7 +361,14 @@ server <- function(input, output, session) {
     },
     bg = "transparent"
   )
-  output$table <- renderReactable({
+  table_data <- reactive({
+    sa <- base_data()
+    if (is.null(sa)) {
+      return(NULL)
+    }
+
+    sa <- sa |>
+      filter(source %in% input$source_party)
     sa <- base_data()
     if (is.null(sa)) {
       return(NULL)
@@ -374,39 +377,46 @@ server <- function(input, output, session) {
     sa <- sa |>
       filter(source %in% input$source_party)
 
-    if (input$expand_columns) {
-      if (input$raw_pc) {
-        sa_wide <- sa |>
-          select(-value, -target) |>
-          mutate(pc = pc / 10) |>
-          pivot_wider(names_from = "target1", values_from = "pc")
-      } else {
-        sa_wide <- sa |>
-          select(-pc, -target) |>
-          pivot_wider(names_from = "target1", values_from = "value")
-      }
-    } else {
-      sa2 = sa |>
+    col_indicator = case_when(
+      isTRUE(input$expand_columns) & input$raw_pc ~ "TT",
+      isTRUE(input$expand_columns) ~ "TF",
+      input$raw_pc ~ "FT",
+      TRUE ~ "FF"
+    )
+
+    if (col_indicator == "TT") {
+      sa_wide <- sa |>
+        select(-value, -target) |>
+        mutate(pc = pc / 10) |>
+        pivot_wider(names_from = "target1", values_from = "pc")
+    } else if (col_indicator == "TF") {
+      sa_wide <- sa |>
+        select(-pc, -target) |>
+        pivot_wider(names_from = "target1", values_from = "value")
+    } else if (col_indicator == "FT") {
+      sa_wide <- sa |>
         summarise(
           value = sum(value),
           pc = sum(pc),
-          .by = c(crosstabs_names, "target")
-        )
-      if (input$raw_pc) {
-        sa_wide <- sa |>
-          select(-value) |>
-          mutate(pc = pc / 10) |>
-          pivot_wider(names_from = "target", values_from = "pc")
-      } else {
-        sa_wide <- sa2 |>
-          select(-pc) |>
-          pivot_wider(names_from = "target", values_from = "value")
-      }
+          .by = c("source", "source1", "target")
+        ) |>
+        select(-value) |>
+        mutate(pc = pc / 10) |>
+        pivot_wider(names_from = "target", values_from = "pc")
+    } else if (col_indicator == "FF") {
+      sa_wide <- sa |>
+        summarise(
+          value = sum(value),
+          pc = sum(pc),
+          .by = c("source", "source1", "target")
+        ) |>
+        select(-pc) |>
+        pivot_wider(names_from = "target", values_from = "value")
     }
-
-    if (nrow(sa_wide) == 0) {
-      return(NULL)
-    }
+    return(sa_wide)
+  })
+  output$table <- renderReactable({
+    sa_wide <- table_data()
 
     desired_order <- c(
       "Lib Dem",
@@ -415,6 +425,7 @@ server <- function(input, output, session) {
       "Green",
       "RefUK",
       "Independent",
+      "Others",
       "Unaligned and No Data",
       "Unknown",
       "Not Voting",
@@ -467,6 +478,10 @@ server <- function(input, output, session) {
     # font(fontname = "Arial", part = "all") |>
     # set_header_labels(source = "Recent MPID \u2192\nOld MPID \u2193") |>
     # htmltools_value()
+  })
+
+  output$debug_text <- renderPrint({
+    return(table_data())
   })
 }
 

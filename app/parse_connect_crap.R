@@ -31,7 +31,11 @@ parse_connect_crap = function(file) {
 
   names(body) = header2
   if (ncol(body) > 1) {
-    body[, -1] <- lapply(body[, -1], function(x) as.numeric(as.character(x)))
+    for (i in 1:ncol(body)) {
+      if (!grepl("crosstab|source", names(body)[i], ignore.case = TRUE)) {
+        body[[i]] <- as.numeric(as.character(body[[i]]))
+      }
+    }
   }
 
   return(body)
