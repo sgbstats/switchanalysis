@@ -5,8 +5,11 @@ library(ggsankey)
 library(shinyWidgets)
 library(flextable)
 library(shinythemes)
+library(shinyjs)
+library(reactable)
 options(shiny.autoreload.legacy_warning = FALSE)
 source("parse_connect_crap.R")
+source("parse_connect_xlsx.R")
 ui <- fluidPage(
   tags$head(tags$style(HTML(
     "
@@ -43,6 +46,12 @@ ui <- fluidPage(
         "Remove Unknowns from Recent MPID",
         value = F
       ),
+      # switchInput(
+      #   "exclude_all",
+      #   "Remove all parties",
+      #   value = FALSE,
+      #   width = "100%"
+      # ),
       pickerInput(
         "source_party",
         "Parties",
@@ -71,7 +80,11 @@ ui <- fluidPage(
     ),
     mainPanel(
       tabsetPanel(
-        tabPanel("Tabular", uiOutput("table")),
+        tabPanel(
+          "Tabular",
+          checkboxInput("expand_columns", "Expand Columns", value = F),
+          reactableOutput("table")
+        ),
         tabPanel(
           "Plot",
           conditionalPanel(
@@ -100,23 +113,41 @@ ui <- fluidPage(
   )
 )
 
-server <- function(input, output) {
+server <- function(input, output, session) {
+  # observe(input$exclude_all, {
+  #   current_parties <- input$source_party
+
+  #   if (input$exclude_all) {
+  #     prs = c()
+  #   } else {
+  #     prs = c(
+  #       "Lib Dem",
+  #       "Labour",
+  #       "Conservative",
+  #       "Green",
+  #       "RefUK",
+  #       "Independent",
+  #       "Unaligned and No Data"
+  #     )
+  #   }
+
+  #   updatePickerInput(session, "source_party", selected = prs)
+  # })
   base_data <- reactive({
     req(input$file1) # require file to be uploaded
 
     sa_raw <- tryCatch(
       {
-        readxl::read_excel(input$file1$datapath, skip = 1) |>
-          rename(source = 1)
+        parse_connect_xlsx(input$file1$datapath)
       },
       error = function(e) {
         tryCatch(
           {
             parse_connect_crap(input$file1$datapath)
           },
-          error = function(e) {
+          error = function(f) {
             showNotification(
-              paste("Error reading Excel file:", e.message),
+              paste("Error reading Excel file:", f$message),
               type = "error"
             )
             return(NULL)
@@ -124,6 +155,13 @@ server <- function(input, output) {
         )
       }
     )
+
+    # safe_1 = possibly(parse_connect_xlsx, otherwise = NULL)
+    # safe_2 = possibly(parse_connect_crap, otherwise = NULL)
+
+    # sa_raw = safe_1(input$file1$datapath) %||%
+    #   safe_2(input$file1$datapath) %||%
+    #   NULL
 
     if (is.null(sa_raw)) {
       return(NULL)
@@ -134,20 +172,28 @@ server <- function(input, output) {
     } else {
       target_remove = c()
     }
+    crosstabs_names = c(
+      names(sa_raw)[grepl("crosstab", names(sa_raw))],
+      "source"
+    )
+
     sa <- sa_raw |>
       select(-contains("%")) |>
       select(-contains("...")) |>
       pivot_longer(
-        cols = -"source",
+        cols = -any_of(crosstabs_names),
         names_to = "target",
         values_to = "value"
       ) |>
-      filter(source != "Total People", target != "Total People") |>
+      filter(
+        if_all(everything(), ~ !grepl("Total People", as.character(.)))
+      ) |>
       mutate(
         source1 = source,
         target1 = target,
         source = case_when(
-          grepl("Lib", source) ~ "Lib Dem",
+          grepl("Not Lib Dem", source) ~ "Not Lib Dem",
+          grepl("Lib|Prob", source) ~ "Lib Dem",
           grepl("Lab", source) ~ "Labour",
           grepl("Con", source) ~ "Conservative",
           grepl("Green", source) ~ "Green",
@@ -156,19 +202,18 @@ server <- function(input, output) {
           TRUE ~ "Unaligned and No Data"
         ),
         target = case_when(
-          grepl("Lib", target) ~ "Lib Dem",
+          grepl("Not Lib Dem", target) ~ "Not Lib Dem",
+          grepl("Lib|Prob", target) ~ "Lib Dem",
           grepl("Lab", target) ~ "Labour",
           grepl("Con", target) ~ "Conservative",
           grepl("Green", target) ~ "Green",
           grepl("Reform|UKIP|BNP|Nat", target) ~ "RefUK",
           grepl("Ind", target) ~ "Independent",
           grepl("Not Voting", target) ~ "Not Voting",
-          grepl("Not Lib Dem", target) ~ "Not Lib Dem",
           TRUE ~ "Unknown"
         )
       ) |>
-      summarise(value = sum(value), .by = c("source", "target")) |>
-      mutate(pc = round(1000 * value / sum(value)), .by = "source") |>
+      mutate(pc = round(1000 * value / sum(value)), .by = crosstabs_names) |>
       filter(!target %in% target_remove)
 
     return(sa)
@@ -224,7 +269,8 @@ server <- function(input, output) {
   })
 
   plot_data <- reactive({
-    sa <- base_data()
+    sa <- base_data() |>
+      summarise(value = sum(value), .by = c("source", "target"))
 
     if (is.null(sa)) {
       return(NULL)
@@ -319,7 +365,7 @@ server <- function(input, output) {
     },
     bg = "transparent"
   )
-  output$table <- renderUI({
+  output$table <- renderReactable({
     sa <- base_data()
     if (is.null(sa)) {
       return(NULL)
@@ -328,15 +374,34 @@ server <- function(input, output) {
     sa <- sa |>
       filter(source %in% input$source_party)
 
-    if (input$raw_pc) {
-      sa_wide <- sa |>
-        select(-value) |>
-        mutate(pc = pc / 10) |>
-        pivot_wider(names_from = "target", values_from = "pc")
+    if (input$expand_columns) {
+      if (input$raw_pc) {
+        sa_wide <- sa |>
+          select(-value, -target) |>
+          mutate(pc = pc / 10) |>
+          pivot_wider(names_from = "target1", values_from = "pc")
+      } else {
+        sa_wide <- sa |>
+          select(-pc, -target) |>
+          pivot_wider(names_from = "target1", values_from = "value")
+      }
     } else {
-      sa_wide <- sa |>
-        select(-pc) |>
-        pivot_wider(names_from = "target", values_from = "value")
+      sa2 = sa |>
+        summarise(
+          value = sum(value),
+          pc = sum(pc),
+          .by = c(crosstabs_names, "target")
+        )
+      if (input$raw_pc) {
+        sa_wide <- sa |>
+          select(-value) |>
+          mutate(pc = pc / 10) |>
+          pivot_wider(names_from = "target", values_from = "pc")
+      } else {
+        sa_wide <- sa2 |>
+          select(-pc) |>
+          pivot_wider(names_from = "target", values_from = "value")
+      }
     }
 
     if (nrow(sa_wide) == 0) {
@@ -355,21 +420,53 @@ server <- function(input, output) {
       "Not Voting",
       "Not Lib Dem"
     )
-
+    crosstabs_names = c(
+      names(sa_wide)[grepl("crosstab", names(sa_wide))],
+      "source",
+      "source1"
+    )
     all_nodes <- unique(sa_wide$source)
+    all_nodes2 <- names(sa_wide)[!sa_wide %in% crosstabs_names]
     other_nodes <- setdiff(all_nodes, desired_order)
-    final_order <- rev(c(desired_order, other_nodes))
+    other_nodes2 <- setdiff(all_nodes2, desired_order)
+    final_order <- unique(c(other_nodes2, desired_order, other_nodes))
+
+    cols_list <- lapply(crosstabs_names, function(col) {
+      new_name <- col
+      agg_func <- "unique"
+
+      if (col == "source") {
+        new_name <- "Party"
+        agg_func <- JS("function() { return '' }")
+      } else if (col == "source1") {
+        new_name <- "Subgroup"
+        agg_func <- JS("function() { return '' }")
+      } else if (grepl("crosstab", col)) {
+        # e.g. "crosstabx" becomes "Crosstab X"
+        new_name <- str_to_title(sub("crosstab", "Crosstab ", col))
+      }
+      colDef(aggregate = agg_func, name = new_name)
+    })
+
+    names(cols_list) = crosstabs_names
 
     sa_wide |>
       mutate(source = factor(source, levels = final_order)) |>
       select(all_of(c(
-        "source",
-        intersect(rev(final_order), names(sa_wide))
+        crosstabs_names,
+        intersect(final_order, names(sa_wide))
       ))) |>
-      flextable() |>
-      font(fontname = "Arial", part = "all") |>
-      set_header_labels(source = "Recent MPID \u2192\nOld MPID \u2193") |>
-      htmltools_value()
+      reactable(
+        groupBy = crosstabs_names[crosstabs_names != "source1"],
+        columns = cols_list,
+        defaultColDef = colDef(
+          aggregate = "sum"
+        )
+      )
+    # flextable() |>
+    # font(fontname = "Arial", part = "all") |>
+    # set_header_labels(source = "Recent MPID \u2192\nOld MPID \u2193") |>
+    # htmltools_value()
   })
 }
 
