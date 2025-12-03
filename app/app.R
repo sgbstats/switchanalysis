@@ -116,25 +116,6 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  # observe(input$exclude_all, {
-  #   current_parties <- input$source_party
-
-  #   if (input$exclude_all) {
-  #     prs = c()
-  #   } else {
-  #     prs = c(
-  #       "Lib Dem",
-  #       "Labour",
-  #       "Conservative",
-  #       "Green",
-  #       "RefUK",
-  #       "Independent",
-  #       "Unaligned and No Data"
-  #     )
-  #   }
-
-  #   updatePickerInput(session, "source_party", selected = prs)
-  # })
   base_data_raw <- reactive({
     req(input$file1) # require file to be uploaded
 
