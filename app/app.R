@@ -107,7 +107,21 @@ ui <- fluidPage(
           ),
           plotOutput("sankeyPlot", height = "600px", width = "800px")
         ),
-        #tabPanel("Debug", verbatimTextOutput("debug_text"))
+        tabPanel("How to videos"),
+        tabPanel(
+          "Report a bug",
+          p(
+            "If you have found a bug either raise an ",
+            a(
+              href = "https://github.com/sgbstats/switchanalysis",
+              "issue on Github"
+            ),
+            " or fill out the form below."
+          ),
+          HTML(
+            '<div data-tf-live="01KBJ8CNNC7J04THJAX5QH7592"></div><script src="//embed.typeform.com/next/embed.js"></script>'
+          )
+        )
       )
     )
   ),
@@ -118,7 +132,6 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-
   output$crosstab_filter_ui <- renderUI({
     sa_raw <- base_data()
     if (!is.null(sa_raw) && "crosstab1" %in% names(sa_raw)) {
