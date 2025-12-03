@@ -118,6 +118,7 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+
   output$crosstab_filter_ui <- renderUI({
     sa_raw <- base_data()
     if (!is.null(sa_raw) && "crosstab1" %in% names(sa_raw)) {
@@ -143,6 +144,7 @@ server <- function(input, output, session) {
     }
     updatePickerInput(session, "source_party", selected = prs)
   })
+
   base_data_raw <- reactive({
     req(input$file1) # require file to be uploaded
 
