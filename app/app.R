@@ -105,7 +105,7 @@ ui <- fluidPage(
           ),
           plotOutput("sankeyPlot", height = "600px", width = "800px")
         ),
-        tabPanel("Debug", verbatimTextOutput("debug_text"))
+        #tabPanel("Debug", verbatimTextOutput("debug_text"))
       )
     )
   ),
