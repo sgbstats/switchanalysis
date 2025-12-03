@@ -39,7 +39,6 @@ ui <- fluidPage(
         "Choose switch analysis file",
         accept = c(".xlsx", ".xls")
       ),
-      checkboxInput("raw_pc", "Show %/Weighted diagram", value = F),
 
       checkboxInput(
         "remove_unknowns",
@@ -82,13 +81,15 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel(
           "Tabular",
+          checkboxInput("raw_pc", "Show %", value = F),
           checkboxInput("expand_columns", "Expand Columns", value = FALSE),
           reactableOutput("table")
         ),
         tabPanel(
           "Plot",
+          checkboxInput("weight", "Weighted diagram", value = T),
           conditionalPanel(
-            "input.raw_pc == true",
+            "input.weight == true",
             tags$h4("Assumptions"),
             div(
               class = "inline-numeric-inputs",
@@ -270,13 +271,18 @@ server <- function(input, output, session) {
 
   plot_data <- reactive({
     sa <- base_data() |>
-      summarise(value = sum(value), pc = sum(pc), .by = c("source", "target"))
+      summarise(
+        value = sum(value, na.rm = TRUE),
+        pc = sum(pc, na.rm = TRUE),
+        .by = c("source", "target")
+      ) |>
+      drop_na(pc)
 
     if (is.null(sa)) {
       return(NULL)
     }
 
-    if (input$raw_pc) {
+    if (input$weight) {
       sa_long <- sa |>
         merge(assumptions_val()) |>
         mutate(pc = pc * weight) |>
@@ -517,7 +523,26 @@ server <- function(input, output, session) {
   })
 
   output$debug_text <- renderPrint({
-    return(table_data())
+    sa <- base_data() |>
+      summarise(value = sum(value), pc = sum(pc), .by = c("source", "target"))
+
+    if (is.null(sa)) {
+      return(NULL)
+    }
+
+    if (input$weight) {
+      sa_long <- sa |>
+        merge(assumptions_val()) |>
+        mutate(pc = pc * weight)
+    } else {
+      sa_long <- sa |>
+        uncount(weights = round(value))
+    }
+
+    return(
+      base_data() |>
+        filter(source == "Green")
+    )
   })
 }
 
