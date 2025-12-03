@@ -31,7 +31,7 @@ ui <- fluidPage(
   "
   ))),
   theme = shinytheme("united"),
-  titlePanel("Switch Analysis Generator"),
+  titlePanel("Switch Analysis"),
   sidebarLayout(
     sidebarPanel(
       fileInput(
@@ -45,12 +45,7 @@ ui <- fluidPage(
         "Remove Unknowns from Recent MPID",
         value = T
       ),
-      # switchInput(
-      #   "exclude_all",
-      #   "Remove all parties",
-      #   value = FALSE,
-      #   width = "100%"
-      # ),
+
       pickerInput(
         "source_party",
         "Parties",
@@ -75,6 +70,12 @@ ui <- fluidPage(
           "Not Lib Dem"
         ),
         multiple = TRUE
+      ),
+      switchInput(
+        "exclude_all",
+        "Remove all parties",
+        value = FALSE,
+        width = "100%"
       )
     ),
     mainPanel(
@@ -87,6 +88,7 @@ ui <- fluidPage(
         ),
         tabPanel(
           "Plot",
+          uiOutput("crosstab_filter_ui"),
           checkboxInput("weight", "Weighted diagram", value = T),
           conditionalPanel(
             "input.weight == true",
@@ -116,6 +118,33 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+
+  output$crosstab_filter_ui <- renderUI({
+    sa_raw <- base_data()
+    if (!is.null(sa_raw) && "crosstab1" %in% names(sa_raw)) {
+      choices <- c("All", unique(sa_raw$crosstab1))
+      selectInput("crosstab_filter", "Crosstab 1", choices = choices)
+    }
+  })
+  observeEvent(input$exclude_all, {
+    if (input$exclude_all) {
+      prs = character(0)
+    } else {
+      prs = c(
+        "Lib Dem",
+        "Labour",
+        "Conservative",
+        "Green",
+        "RefUK",
+        "Independent",
+        "Unaligned and No Data",
+        "Not Voting",
+        "Not Lib Dem"
+      )
+    }
+    updatePickerInput(session, "source_party", selected = prs)
+  })
+
   base_data_raw <- reactive({
     req(input$file1) # require file to be uploaded
 
@@ -251,7 +280,14 @@ server <- function(input, output, session) {
   })
 
   plot_data <- reactive({
-    sa <- base_data() |>
+    sa_data <- base_data()
+
+    if (!is.null(input$crosstab_filter) && input$crosstab_filter != "All") {
+      sa_data <- sa_data |>
+        filter(crosstab1 == input$crosstab_filter)
+    }
+
+    sa <- sa_data |>
       summarise(
         value = sum(value, na.rm = TRUE),
         pc = sum(pc, na.rm = TRUE),
@@ -521,8 +557,7 @@ server <- function(input, output, session) {
     }
 
     return(
-      base_data() |>
-        filter(source == "Green")
+      base_data()
     )
   })
 }
