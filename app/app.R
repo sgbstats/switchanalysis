@@ -44,7 +44,7 @@ ui <- fluidPage(
       checkboxInput(
         "remove_unknowns",
         "Remove Unknowns from Recent MPID",
-        value = F
+        value = T
       ),
       # switchInput(
       #   "exclude_all",
@@ -189,6 +189,7 @@ server <- function(input, output, session) {
         source1 = source,
         target1 = target,
         source = case_when(
+          grepl("Refused", source) ~ "Unaligned and No Data",
           grepl("Not Lib Dem", source) ~ "Not Lib Dem",
           grepl("Lib|Prob", source) ~ "Lib Dem",
           grepl("Lab", source) ~ "Labour",
@@ -199,6 +200,7 @@ server <- function(input, output, session) {
           TRUE ~ "Unaligned and No Data"
         ),
         target = case_when(
+          grepl("Refused", target) ~ "Unknown",
           grepl("Not Lib Dem", target) ~ "Not Lib Dem",
           grepl("Lib|Prob", target) ~ "Lib Dem",
           grepl("Lab", target) ~ "Labour",
@@ -367,117 +369,151 @@ server <- function(input, output, session) {
       return(NULL)
     }
 
-    sa <- sa |>
-      filter(source %in% input$source_party)
-    sa <- base_data()
-    if (is.null(sa)) {
-      return(NULL)
-    }
+    crosstab_cols <- names(sa)[grepl("crosstab", names(sa))]
 
-    sa <- sa |>
-      filter(source %in% input$source_party)
-
-    col_indicator = case_when(
-      isTRUE(input$expand_columns) & input$raw_pc ~ "TT",
-      isTRUE(input$expand_columns) ~ "TF",
-      input$raw_pc ~ "FT",
-      TRUE ~ "FF"
-    )
-
-    if (col_indicator == "TT") {
-      sa_wide <- sa |>
-        select(-value, -target) |>
-        mutate(pc = pc / 10) |>
-        pivot_wider(names_from = "target1", values_from = "pc")
-    } else if (col_indicator == "TF") {
+    if (isTRUE(input$expand_columns)) {
       sa_wide <- sa |>
         select(-pc, -target) |>
-        pivot_wider(names_from = "target1", values_from = "value")
-    } else if (col_indicator == "FT") {
+        pivot_wider(
+          names_from = "target1",
+          values_from = "value",
+          values_fill = 0
+        )
+    } else {
       sa_wide <- sa |>
         summarise(
           value = sum(value),
-          pc = sum(pc),
-          .by = c("source", "source1", "target")
+          .by = c("source", "source1", "target", crosstab_cols)
         ) |>
-        select(-value) |>
-        mutate(pc = pc / 10) |>
-        pivot_wider(names_from = "target", values_from = "pc")
-    } else if (col_indicator == "FF") {
-      sa_wide <- sa |>
-        summarise(
-          value = sum(value),
-          pc = sum(pc),
-          .by = c("source", "source1", "target")
-        ) |>
-        select(-pc) |>
-        pivot_wider(names_from = "target", values_from = "value")
+        pivot_wider(
+          names_from = "target",
+          values_from = "value",
+          values_fill = 0
+        )
     }
+
+    crosstabs_names_local <- c(crosstab_cols, "source", "source1")
+    numeric_cols <-
+      setdiff(names(sa_wide), crosstabs_names_local)
+    numeric_cols_exist <-
+      intersect(numeric_cols, names(sa_wide))
+
+    if (length(numeric_cols_exist) > 0) {
+      sa_wide$Total <-
+        rowSums(sa_wide[numeric_cols_exist], na.rm = TRUE)
+    } else {
+      sa_wide$Total <- 0
+    }
+
     return(sa_wide)
   })
   output$table <- renderReactable({
     sa_wide <- table_data()
 
-    desired_order <- c(
-      "Lib Dem",
-      "Labour",
-      "Conservative",
-      "Green",
-      "RefUK",
-      "Independent",
-      "Others",
-      "Unaligned and No Data",
-      "Unknown",
-      "Not Voting",
-      "Not Lib Dem"
-    )
-    crosstabs_names = c(
-      names(sa_wide)[grepl("crosstab", names(sa_wide))],
-      "source",
-      "source1"
-    )
+    if (is.null(sa_wide) || nrow(sa_wide) == 0) {
+      return()
+    }
+
+    # Define grouping and numeric columns
+    crosstabs_names <-
+      names(sa_wide)[grepl("crosstab", names(sa_wide))]
+    grouping_cols <- c(crosstabs_names, "source", "source1")
+    numeric_cols <-
+      setdiff(names(sa_wide), c(grouping_cols, "Total"))
+
+    # Define column order
+    desired_order <-
+      c(
+        "Lib Dem",
+        "Labour",
+        "Conservative",
+        "Green",
+        "RefUK",
+        "Independent",
+        "Others",
+        "Unaligned and No Data",
+        "Unknown",
+        "Not Voting",
+        "Not Lib Dem"
+      )
     all_nodes <- unique(sa_wide$source)
-    all_nodes2 <- names(sa_wide)[!sa_wide %in% crosstabs_names]
     other_nodes <- setdiff(all_nodes, desired_order)
-    other_nodes2 <- setdiff(all_nodes2, desired_order)
-    final_order <- unique(c(other_nodes2, desired_order, other_nodes))
+    final_order <- unique(c(numeric_cols, desired_order, other_nodes))
 
-    cols_list <- lapply(crosstabs_names, function(col) {
-      new_name <- col
-      agg_func <- "unique"
+    # Base column definitions for grouping columns
+    cols_list <- list(
+      source = colDef(name = "Party"),
+      source1 = colDef(name = "Subgroup")
+    )
+    for (col in crosstabs_names) {
+      cols_list[[col]] <-
+        colDef(name = str_to_title(sub("crosstab", "Crosstab ", col)))
+    }
 
-      if (col == "source") {
-        new_name <- "Party"
-        agg_func <- JS("function() { return '' }")
-      } else if (col == "source1") {
-        new_name <- "Subgroup"
-        agg_func <- JS("function() { return '' }")
-      } else if (grepl("crosstab", col)) {
-        # e.g. "crosstabx" becomes "Crosstab X"
-        new_name <- str_to_title(sub("crosstab", "Crosstab ", col))
-      }
-      colDef(aggregate = agg_func, name = new_name)
-    })
+    # Define numeric columns
+    if (isTRUE(input$raw_pc)) {
+      # JS function for percentage cells
+      percent_js_func <- JS(
+        "function(cellInfo) {
+            var total = cellInfo.row.Total;
+            if (total === 0 || !total) return '0.0%';
+            var pct = (cellInfo.value / total) * 100;
+            return pct.toFixed(1) + '%';
+        }"
+      )
 
-    names(cols_list) = crosstabs_names
-
-    sa_wide |>
-      mutate(source = factor(source, levels = final_order)) |>
-      select(all_of(c(
-        crosstabs_names,
-        intersect(final_order, names(sa_wide))
-      ))) |>
-      reactable(
-        groupBy = crosstabs_names[crosstabs_names != "source1"],
-        columns = cols_list,
-        defaultColDef = colDef(
+      numeric_col_defs <- lapply(numeric_cols, function(col) {
+        colDef(
+          cell = percent_js_func,
+          aggregated = percent_js_func,
           aggregate = "sum"
         )
+      })
+      names(numeric_col_defs) <- numeric_cols
+      cols_list <- c(cols_list, numeric_col_defs)
+      # Hide Total column in percent view
+      cols_list$Total <- colDef(show = FALSE, aggregate = "sum")
+    } else {
+      # For raw view, just ensure they are summed
+      numeric_col_defs <-
+        lapply(numeric_cols, function(col) {
+          colDef(aggregate = "sum")
+        })
+      names(numeric_col_defs) <- numeric_cols
+      cols_list <- c(cols_list, numeric_col_defs)
+      # Show Total column in raw view
+      cols_list$Total <-
+        colDef(show = FALSE, aggregate = "sum")
+    }
+
+    # Set up grouping
+    group_by_cols <-
+      if (isTRUE(input$expand_columns)) {
+        setdiff(grouping_cols, "source1")
+      } else {
+        c(crosstabs_names, "source")
+      }
+
+    sa_wide_ordered <- sa_wide |>
+      mutate(source = factor(source, levels = final_order)) |>
+      select(
+        all_of(crosstabs_names),
+        source,
+        source1,
+        Total,
+        all_of(numeric_cols)
       )
-    # flextable() |>
-    # font(fontname = "Arial", part = "all") |>
-    # set_header_labels(source = "Recent MPID \u2192\nOld MPID \u2193") |>
-    # htmltools_value()
+
+    reactable(
+      sa_wide_ordered,
+      groupBy = group_by_cols,
+      columns = cols_list,
+      columnGroups = list(
+        colGroup(name = "Previous Voter ID", columns = c("source", "source1")),
+        colGroup(name = "Recent Voter ID", columns = numeric_cols)
+      ),
+      defaultColDef = colDef(aggregate = "sum")
+    )
   })
 
   output$debug_text <- renderPrint({
