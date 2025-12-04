@@ -87,7 +87,7 @@ ui <- fluidPage(
           reactableOutput("table")
         ),
         tabPanel(
-          "Plot",
+          "Sankey Plot",
           uiOutput("crosstab_filter_ui"),
           checkboxInput("weight", "Weighted diagram", value = T),
           conditionalPanel(
@@ -107,7 +107,16 @@ ui <- fluidPage(
           ),
           plotOutput("sankeyPlot", height = "600px", width = "800px")
         ),
-        tabPanel("How to videos"),
+        tabPanel(
+          "User Guide",
+          tabsetPanel(
+            tabPanel(
+              "How to use the tool",
+              includeMarkdown("userguide.qmd"),
+            ),
+            tabPanel("Intro to switch analysis")
+          )
+        ),
         tabPanel(
           "Report a bug",
           p(
@@ -128,8 +137,12 @@ ui <- fluidPage(
   hr(),
   p(
     "Hosted by Posit. Published and promoted by S Bate on behalf of ALDC all at Unit 2KLM, Beehive Mill, Jersey Street, Manchester, M4 6JG"
+  ),
+  p(
+    "Disclaimer: this tool serves to help you interpret a switch analysis. The Sankey plot does not (currently) constitute a prediction. The responsibility to interpret the data aggregated here is your own"
   )
 )
+
 
 server <- function(input, output, session) {
   output$crosstab_filter_ui <- renderUI({
@@ -288,7 +301,10 @@ server <- function(input, output, session) {
         input$independent_assumption,
         input$unknown_assumption
       )
-    )
+    ) |>
+      filter(weight > 0) |>
+      mutate(weight = weight / min(weight))
+
     assumptions_val(df)
   })
 
