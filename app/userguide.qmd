@@ -12,19 +12,33 @@ As with all switch analyses, a large amount of data is needed. You get the best 
 ### Build your list
 
 1.  Create a list on Connect
+
     -   Select people who have responded to a vote intent question in a period
     -   Make sure you have filtered by ward/constituency/etc
         -   It can cope with multiple wards
-    -   You can pick a larger pool of people but you risk having a substantial number of poeople with no vote intent
+    -   You can pick a larger pool of people but you risk having a substantial number of people with no vote intent
+
 2.  Run your list
+
 3.  Click counts and then quick counts and cross tabs
+
+    ![](images/paste-7.png){width="300"}
 
 ### Build your Crosstabs
 
-1.  In crosstab 1, select your previous MPID by selecting the target pools option and picking the correct year
-    -   There are several options you can choose from. If you had locals in 2025 then pick MPID 2025, if you have locals in 2024 then 2024, etc etc. - If you want to look at multiple wards, then choose ward in crosstab 1 and you previous MPID in crosstab 2
-2.  In Column 1, choose master questions, vote intent, recent MPID
-3.  Refresh results, export to excel, ignore wanrings and save
+1.  In column 1, select your previous MPID by selecting the target pools option and picking the correct year
+
+    -   There are several options you can choose from. If you had locals in 2025 then pick MPID 2025, if you have locals in 2024 then 2024, etc etc.
+        -   These are in the target pools section
+
+            ![](images/paste-9.png){width="250"}
+    -   If you want to look at multiple wards, then choose ward in column 1 and you previous MPID in column 2
+
+2.  In crosstab 1, choose master questions, vote intent, recent MPID
+
+    ![](images/paste-8.png){width="300"}
+
+3.  Refresh results, export to excel, ignore warnings and save
 
 ### Running the analysis
 
@@ -84,3 +98,7 @@ You can untick the weighted diagram box but this will distort the data.
 ![](images/paste-5.png){width="300"}
 
 If you have an analysis that has extra crosstabs, it will give you the option here to split by each the different options in the first cross tab.
+
+## Examples
+
+There are examples of data available to [download from github](https://github.com/sgbstats/switchanalysis)

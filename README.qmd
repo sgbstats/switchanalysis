@@ -1,0 +1,12 @@
+---
+title: "README"
+format: gfm
+filters:
+  - rewrite-paths.lua
+execute:
+  dir: app
+---
+
+{{< include app/userguide.qmd >}}
+
+{{< include app/switch-guide.qmd >}}

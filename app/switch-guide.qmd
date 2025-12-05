@@ -1,0 +1,24 @@
+---
+title: "Switch analysis"
+format: html
+---
+
+### What is switch analysis?
+
+Switch analysis is a toll that we can use to analyse our results from canvassing. It gives us a detailed breakdown of how voter behave over time.
+
+#### Why can't I just count how many definites (Ds) and probables (Ps) there are?
+
+When you knock on doors, the people who answer the door aren't random and probably aren't representative of your ward as a whole. You might go knocking in your best polling district, get loads of Ds & Ps and then think that you are going to win by a mile and then be sorely disappointed come polling day. Conversely, certain types of voters are more likely to answer the door (even if you did knock on every single door in your ward) and this may skew the results of just taking the percentages from the voter intent question.
+
+#### What can switch analysis tell us?
+
+If you have data from at least one, if not several cycles, you can see how people who have answered a vote intent question multiple times move between different parties.
+
+### How to interpret switch analysis
+
+![](images/paste-6.png){width="500"}
+
+In a switch analysis, the previous vote intent is always on the left and the recent vote intent is always on the top.
+
+What we can see

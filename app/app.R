@@ -114,7 +114,10 @@ ui <- fluidPage(
               "How to use the tool",
               includeMarkdown("userguide.qmd"),
             ),
-            tabPanel("Intro to switch analysis")
+            tabPanel(
+              "Intro to switch analysis",
+              includeMarkdown("switch-guide.qmd"),
+            )
           )
         ),
         tabPanel(
