@@ -1,6 +1,9 @@
 # Switch analysis
 
 
+The app is available at
+[aldc.shinyapps.io/switchanalysis](aldc.shinyapps.io/switchanalysis)
+
 This tool was built to make interpreting switch analysis easier.
 
 If you are a candidate, stop here and go and deliver some more leaflets

@@ -5,7 +5,9 @@ output-file: "README.md"
 filters:
   - rewrite-paths.lua
 ---
+The app is available at [aldc.shinyapps.io/switchanalysis](aldc.shinyapps.io/switchanalysis)
 
 {{< include app/userguide.qmd >}}
 
 {{< include app/switch-guide.qmd >}}
+
