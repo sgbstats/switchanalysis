@@ -7,6 +7,7 @@ library(flextable)
 library(shinythemes)
 library(shinyjs)
 library(reactable)
+library(markdown)
 options(shiny.autoreload.legacy_warning = FALSE)
 source("parse_connect_crap.R")
 source("parse_connect_xlsx.R")
@@ -44,7 +45,7 @@ ui <- navbarPage(
     ))
   ),
   tabPanel(
-    "Analysis",
+    "Home",
     sidebarLayout(
       sidebarPanel(
         fileInput(
