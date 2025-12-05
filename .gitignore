@@ -49,5 +49,5 @@ po/*~
 rsconnect/
 junk/
 
-.Rproj
-.html
+*.Rproj
+*.html
