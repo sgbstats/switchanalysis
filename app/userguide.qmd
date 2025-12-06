@@ -3,6 +3,8 @@ title: "User guide"
 format: html
 ---
 
+## User Guide
+
 This tool was built to make interpreting switch analysis easier.
 
 If you are a candidate, stop here and go and deliver some more leaflets and knock on more doors. This is for campaign managers and backroom staff. If you are unsure what switch analysis is, there is a guide on the next tab.

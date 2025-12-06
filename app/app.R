@@ -102,6 +102,16 @@ ui <- navbarPage(
           ),
           tabPanel(
             "Sankey Plot",
+            tags$div(
+              class = "alert alert-warning",
+              style = "margin:0; padding:2px 6px;", # tight alert
+              HTML(
+                paste0(
+                  "Make sure you have read or watched the user guide before interpreting this diagram.",
+                  "<button type='button' class='close' data-dismiss='alert' aria-label='Close'><span aria-hidden='true'>&times;</span></button>"
+                )
+              )
+            ),
             uiOutput("crosstab_filter_ui"),
             checkboxInput("weight", "Weighted diagram", value = TRUE),
             conditionalPanel(
