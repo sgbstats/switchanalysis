@@ -1,0 +1,49 @@
+---
+title: "Switch analysis"
+format: html
+---
+
+### What is switch analysis?
+
+Switch analysis is a toll that we can use to analyse our results from canvassing. It gives us a detailed breakdown of how voter behave over time.
+
+#### Why can't I just count how many definites (Ds) and probables (Ps) there are?
+
+When you knock on doors, the people who answer the door aren't random and probably aren't representative of your ward as a whole. You might go knocking in your best polling district, get loads of Ds & Ps and then think that you are going to win by a mile and then be sorely disappointed come polling day. Conversely, certain types of voters are more likely to answer the door (even if you did knock on every single door in your ward) and this may skew the results of just taking the percentages from the voter intent question.
+
+#### What can switch analysis tell us?
+
+If you have data from at least one, if not several cycles, you can see how people who have answered a vote intent question multiple times move between different parties.
+
+#### Caveats
+
+The analysis is only as good as the data that is put in. You need to have good canvassers that can get a good vote intent out of voters. Overly optimistic canvassing will only hurt you in the long run. Not just giving you a more optimistic switch analysis but it will hurt your polling day operation and then make the switch analysis worse in later years when people are recanvassed.
+
+### How to interpret switch analysis
+
+![](images/paste-6.png){width="500"}
+
+In a switch analysis, the previous vote intent is always on the left and the recent vote intent is always on the top.
+
+What we can see is for each party where there voters are going (make sure you have show % ticked). The percentage is always across a whole row. In our example here, we can see that 95.7% of previously identified LD voters are staying with us. However, we can see that only 46% of Labour voters are sticking with them with 41%. This is seen as very good for us.
+
+Further down, you also want to be looking at your squeeze party. You want to see lots of their voters coming towards us. As a general caveat, if your squeeze voters are well heeled, they will start to show in the Lib Dem pile and sticking with us.
+
+Finally, what is often the largest group, No Data is important to look at as that shows where the (mostly) uncavassed are saying they are going to. We want to see a nice healthy chunk in our column and much larger than our opponents. This line does often include previously not voting and unaligned but they make up a very small number. This group will be a mix of previously uncavassed people (who may or may not vote) and new to register. The mix of these people will depend on your area, how much work has been done in previous years, what the turnover in the ward is, and whether people tend to answer their doors.
+
+### A side note on questions
+
+The way people end up in these groups is by answering questions which have canvas points applied. These are questions include `Vote Intent: Local Election`, Previous Vote, Usual Support, Party (1-5) but only where they answer 4 or 5, and Consider Lib Dem. The canvas points are not applied for Anti Party.
+
+Be careful when using scripts that contain `Consider Lib Dem?`. If you answer Yes without adding extra answers, you are likely to end up with people in the wrong pool. This is specifically a squeeze question. If in a Labour-facing area, a voter answers Conservetive, Consider: Yes they become a very important voter because they can be Squeezed but one that says Conservative, Consider No then you are unlikely to have them change to vote for you. If you have (again in a Lab-facing area) a Labour voter saying Cosider Yes then they should be put down as Soft Labour rather than Consider Yes.
+
+### Glossary
+
+-   Support pool: those likely to vote for us
+-   Switch pool: a group of voters that may switch from the main opposition to us
+-   Squeeze pool: voters who would normally vote for a 3rd, 4th, ... party but would consider voting for us
+-   Suppress pool; Stay-at-Home pool: Voters who we would prefer didn't vote at all because they will never vote at all.
+-   D; Def: Definite Lib Dem
+-   P; Prob: Probable Lib Dems
+-   SLab/SCon: Soft Labour/Conservative, those that wouldn't rule us out
+-   *Colour* Lib Dem: A likely Lib Dem voter and the colour of their likely second choice. Strong Lib Dems can become Red/Blue/Green Lib Dems but never the other way round. This system also applies to other parties. Nat instead of a colour indicates Reform (and other nationalist parties).
