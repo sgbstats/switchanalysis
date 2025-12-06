@@ -96,14 +96,14 @@ ui <- navbarPage(
         tabsetPanel(
           tabPanel(
             "Tabular",
-            checkboxInput("raw_pc", "Show %", value = F),
+            checkboxInput("raw_pc", "Show %", value = TRUE),
             checkboxInput("expand_columns", "Expand Columns", value = FALSE),
             reactableOutput("table")
           ),
           tabPanel(
             "Sankey Plot",
             uiOutput("crosstab_filter_ui"),
-            checkboxInput("weight", "Weighted diagram", value = T),
+            checkboxInput("weight", "Weighted diagram", value = TRUE),
             conditionalPanel(
               "input.weight == true",
               tags$h4("Assumptions"),
@@ -139,7 +139,12 @@ ui <- navbarPage(
       ),
       tabPanel(
         "Intro to switch analysis",
-        includeMarkdown("switch-guide.qmd"),
+        div(
+          HTML(
+            '<iframe width="560" height="315" src="https://www.youtube.com/embed/eT5ddMXNMFs" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>'
+          ),
+          includeMarkdown("switch-guide.qmd"),
+        )
       )
     )
   ),
@@ -165,7 +170,7 @@ ui <- navbarPage(
       "Hosted by Posit. Published and promoted by S Bate on behalf of ALDC all at Unit 2KLM, Beehive Mill, Jersey Street, Manchester, M4 6JG"
     ),
     p(
-      "Disclaimer: this tool serves to help you interpret a switch analysis. The Sankey plot does not (currently) constitute a prediction. The responsibility to interpret the data aggregated here is your own."
+      "Disclaimer: this tool serves to help you interpret a switch analysis. The Sankey plot does not (currently) constitute a prediction. The responsibility to interpret the data aggregated here is your own. This is currently only valid in England."
     ),
     p(a(
       "Licenced under CC BY-NC-SA 4.0",
