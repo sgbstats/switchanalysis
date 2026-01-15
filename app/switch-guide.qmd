@@ -33,9 +33,9 @@ Finally, what is often the largest group, No Data is important to look at as tha
 
 ### A side note on questions
 
-The way people end up in these groups is by answering questions which have canvas points applied. These are questions include `Vote Intent: Local Election`, Previous Vote, Usual Support, Party (1-5) but only where they answer 4 or 5, and Consider Lib Dem. The canvas points are not applied for Anti Party.
+The way people end up in these groups is by answering questions which have canvas points applied. These are questions include `Vote Intent: LocalElec Canv (Eng)`, `Local Past Vote(Eng)`, `Usual Support`, Party `xxx out of 5` but only where they answer 4 or 5, and `Consider Lib Dem?`. The canvas points are not applied for Anti Party.
 
-Be careful when using scripts that contain `Consider Lib Dem?`. If you answer Yes without adding extra answers, you are likely to end up with people in the wrong pool. This is specifically a squeeze question. If in a Labour-facing area, a voter answers Conservetive, Consider: Yes they become a very important voter because they can be Squeezed but one that says Conservative, Consider No then you are unlikely to have them change to vote for you. If you have (again in a Lab-facing area) a Labour voter saying Cosider Yes then they should be put down as Soft Labour rather than Consider Yes.
+Be careful when using scripts that contain `Consider Lib Dem?`. If you answer `Yes` without adding extra answers, you are likely to end up with people in the wrong pool. This is specifically a squeeze question. If in a Labour-facing area, a voter answers Conservetive, `Consider Lib Dem`: `Yes` they become a very important voter because they can be Squeezed but one that says Conservative, Consider No then you are unlikely to have them change to vote for you. If you have (again in a Lab-facing area) a Labour voter saying Cosider Yes then they should be put down as Soft Labour rather than Consider Yes.
 
 ### Glossary
 
