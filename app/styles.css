@@ -1,0 +1,35 @@
+/* styles.css — force Markdown blockquotes (>) to match normal document text size
+   Place this file next to userguide.qmd and ensure your YAML includes:
+
+   format:
+     html:
+       css: styles.css
+
+   The rules cover Quarto callouts and common runtime wrappers (Shiny/Quarto).
+*/
+
+body blockquote,
+.quarto blockquote,
+article blockquote,
+aside.callout blockquote,
+.callout blockquote,
+.markdown blockquote,
+.container blockquote {
+  font-size: inherit !important;    /* use the document font size */
+  font-weight: inherit !important;  /* inherit weight in case theme bolds quotes */
+  line-height: inherit !important;
+  margin: 0 0 1rem 0 !important;
+  padding-left: 1rem !important;    /* keep a small indent if needed */
+}
+
+/* ensure paragraphs inside blockquotes don't add extra spacing */
+body blockquote p,
+.quarto blockquote p {
+  margin: 0 !important;
+}
+
+/* fallback for themes that use larger font-size on .blockquote class */
+.blockquote,
+blockquote.blockquote {
+  font-size: inherit !important;
+}

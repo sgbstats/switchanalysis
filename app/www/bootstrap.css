@@ -702,7 +702,7 @@ progress {
 
 .blockquote {
   margin-bottom: 1rem;
-  font-size: 1.25rem;
+  font-size: inherit !important;
 }
 .blockquote > :last-child {
   margin-bottom: 0;

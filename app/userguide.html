@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
 <meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.23">
+<meta name="generator" content="quarto-1.7.32">
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
@@ -26,17 +26,17 @@ ul.task-list li input[type="checkbox"] {
 <script src="userguide_files/libs/clipboard/clipboard.min.js"></script>
 <script src="userguide_files/libs/quarto-html/quarto.js" type="module"></script>
 <script src="userguide_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="userguide_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
 <script src="userguide_files/libs/quarto-html/popper.min.js"></script>
 <script src="userguide_files/libs/quarto-html/tippy.umd.min.js"></script>
 <script src="userguide_files/libs/quarto-html/anchor.min.js"></script>
 <link href="userguide_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="userguide_files/libs/quarto-html/quarto-syntax-highlighting-1fe81d0376b2c50856e68e651e390326.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="userguide_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
 <script src="userguide_files/libs/bootstrap/bootstrap.min.js"></script>
 <link href="userguide_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="userguide_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<link href="userguide_files/libs/bootstrap/bootstrap-bb462d781dde1847d9e3ccf7736099dd.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
 
 
+<link rel="stylesheet" href="styles.css">
 </head>
 
 <body class="fullcontent quarto-light">
@@ -64,9 +64,12 @@ ul.task-list li input[type="checkbox"] {
 </header>
 
 
+<hr>
+<section id="user-guide" class="level2">
+<h2 class="anchored" data-anchor-id="user-guide">User Guide</h2>
 <p>This tool was built to make interpreting switch analysis easier.</p>
 <p>If you are a candidate, stop here and go and deliver some more leaflets and knock on more doors. This is for campaign managers and backroom staff. If you are unsure what switch analysis is, there is a guide on the next tab.</p>
-<p>As with all switch analyses, a large amount of data is needed. You get the best results when you have several cycles of data but can still draw inferences in a start up ward.</p>
+<p>As with all switch analyses, a large amount of data is needed. You get the best results when you have several cycles of data but can still draw inferences in a start-up ward.</p>
 <section id="build-your-list" class="level3">
 <h3 class="anchored" data-anchor-id="build-your-list">Build your list</h3>
 <ol type="1">
@@ -83,6 +86,9 @@ ul.task-list li input[type="checkbox"] {
 <li><p>Click counts and then quick counts and cross tabs</p>
 <p><img src="images/paste-7.png" class="img-fluid" width="300"></p></li>
 </ol>
+<blockquote class="blockquote">
+<p>Any target pool with Switch Analysis in its name, and a year will hold data frozen after the elections in that year. You can then run a report that compares the responses to your current voting intention question, or the Master Party ID, with how things were then. Usually we ensure that there is a switch analyse target pool that contains the MPID as it was immediately after the most recent general election, and another for the set of local elections four years ago. There are also usually two pools that freeze the canvass analysis as it was after the last election (whatever type of election happened most recently), both using the separate 37 canvass analysis categories and also summarised into each of the main parties. <a href="https://tech.libdems.org.uk/training/connect/toolkit/canvass-analysis-target-pools">LD Connect Toolkit</a></p>
+</blockquote>
 </section>
 <section id="build-your-crosstabs" class="level3">
 <h3 class="anchored" data-anchor-id="build-your-crosstabs">Build your Crosstabs</h3>
@@ -133,8 +139,8 @@ ul.task-list li input[type="checkbox"] {
 <p>When you open the Sankey Plot tab, you will see the assumptions menu.</p>
 <p><img src="images/paste-4.png" class="img-fluid" width="300"></p>
 <p>In here you can add weights to the bars so that the left side is proportion to your own circumstances.</p>
-<p>Currently, I would suggest using your previous election results and then in new voters add the turnover in your ward.</p>
 <p>This defaults to equal weights so you can see how each party is breaking (but remember there may be distortions due to small numbers).</p>
+<p>Currently, I would suggest using your previous election results and then in new voters, add the turnover in your ward.</p>
 <p>While no data includes, latent voters (those that have voted before but don’t have any data) and new data. It is yet to be found whether these different groups of breakdown differently.</p>
 <p>Obviously, if you are starting from further back you are going to need to switch more voters than if it is very close or you won previously.</p>
 <p>The Sankey diagram can be slow to update.</p>
@@ -145,6 +151,7 @@ ul.task-list li input[type="checkbox"] {
 <h4 class="anchored" data-anchor-id="crosstabs">Crosstabs</h4>
 <p><img src="images/paste-5.png" class="img-fluid" width="300"></p>
 <p>If you have an analysis that has extra crosstabs, it will give you the option here to split by each the different options in the first cross tab.</p>
+</section>
 </section>
 </section>
 <section id="examples" class="level2">
@@ -205,14 +212,13 @@ ul.task-list li input[type="checkbox"] {
       e.clearSelection();
     }
     const getTextToCopy = function(trigger) {
-      const outerScaffold = trigger.parentElement.cloneNode(true);
-      const codeEl = outerScaffold.querySelector('code');
-      for (const childEl of codeEl.children) {
-        if (isCodeAnnotation(childEl)) {
-          childEl.remove();
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
         }
-      }
-      return codeEl.innerText;
+        return codeEl.innerText;
     }
     const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
       text: getTextToCopy

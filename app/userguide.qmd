@@ -1,6 +1,9 @@
 ---
 title: "User guide"
-format: html
+format: 
+    html:
+        css: styles.css
+---
 ---
 
 ## User Guide
@@ -9,7 +12,9 @@ This tool was built to make interpreting switch analysis easier.
 
 If you are a candidate, stop here and go and deliver some more leaflets and knock on more doors. This is for campaign managers and backroom staff. If you are unsure what switch analysis is, there is a guide on the next tab.
 
-As with all switch analyses, a large amount of data is needed. You get the best results when you have several cycles of data but can still draw inferences in a start up ward.
+As with all switch analyses, a large amount of data is needed. You get the best results when you have several cycles of data but can still draw inferences in a start-up ward.
+
+
 
 ### Build your list
 
@@ -25,6 +30,8 @@ As with all switch analyses, a large amount of data is needed. You get the best 
 3.  Click counts and then quick counts and cross tabs
 
     ![](images/paste-7.png){width="300"}
+
+Any target pool with Switch Analysis in its name, and a year will hold data frozen after the elections in that year. You can then run a report that compares the responses to your current voting intention question, or the Master Party ID, with how things were then. Usually we ensure that there is a switch analyse target pool that contains the MPID as it was immediately after the most recent general election, and another for the set of local elections four years ago. There are also usually two pools that freeze the canvass analysis as it was after the last election (whatever type of election happened most recently), both using the separate 37 canvass analysis categories and also summarised into each of the main parties. [LD Connect Toolkit](https://tech.libdems.org.uk/training/connect/toolkit/canvass-analysis-target-pools)
 
 ### Build your Crosstabs
 
@@ -81,9 +88,9 @@ When you open the Sankey Plot tab, you will see the assumptions menu.
 
 In here you can add weights to the bars so that the left side is proportion to your own circumstances.
 
-Currently, I would suggest using your previous election results and then in new voters add the turnover in your ward.
-
 This defaults to equal weights so you can see how each party is breaking (but remember there may be distortions due to small numbers).
+
+Currently, I would suggest using your previous election results and then in new voters, add the turnover in your ward.
 
 While no data includes, latent voters (those that have voted before but don't have any data) and new data. It is yet to be found whether these different groups of breakdown differently.
 
