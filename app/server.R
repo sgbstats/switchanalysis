@@ -244,8 +244,8 @@ server <- function(input, output, session) {
         select("node" = source, label)
       if (input$pc_label) {
         df <- hold[["df"]] |>
-          left_join(av_pc, by = "node") |>
-          left_join(sa_labels, by = "node") |>
+          merge(av_pc, by = "node", sort = F) |>
+          merge(sa_labels, by = "node", sort = F) |>
           mutate(
             display_label = if_else(x == "source", label.x, label.y)
           )
