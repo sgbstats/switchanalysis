@@ -94,6 +94,8 @@ Currently, I would suggest using your previous election results and then in new 
 
 While no data includes, latent voters (those that have voted before but don't have any data) and new data. It is yet to be found whether these different groups of breakdown differently.
 
+Use the Show % box to show the percentage of each column relative to the total in that column. Remember if you are using some of the no data categories, this will distort the percentages from what you enter.
+
 Obviously, if you are starting from further back you are going to need to switch more voters than if it is very close or you won previously.
 
 The Sankey diagram can be slow to update.

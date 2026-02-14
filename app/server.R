@@ -65,9 +65,9 @@ server <- function(input, output, session) {
       "source"
     )
 
-    sa <- sa_raw |>
-      select(-contains("%")) |>
-      select(-contains("...")) |>
+    sa_data <- sa_raw |>
+      select(-any_of(contains("%"))) |>
+      select(-any_of(contains("..."))) |>
       pivot_longer(
         cols = -any_of(crosstabs_names),
         names_to = "target",
@@ -107,7 +107,7 @@ server <- function(input, output, session) {
       filter(!target %in% target_remove) |>
       mutate(pc = round(1000 * value / sum(value)), .by = crosstabs_names)
 
-    return(sa)
+    return(sa_data)
   })
 
   assumptions_val <- reactiveVal({
@@ -173,28 +173,26 @@ server <- function(input, output, session) {
     sa <- sa_data |>
       summarise(
         value = sum(value, na.rm = TRUE),
-        pc = sum(pc, na.rm = TRUE),
         .by = c("source", "target")
       ) |>
-      drop_na(pc)
+      drop_na(value) |>
+      mutate(pc = round(1000 * value / sum(value)), .by = c("source"))
 
     if (is.null(sa)) {
       return(NULL)
     }
+    sa_weights <- sa |>
+      merge(assumptions_val()) |>
+      mutate(pc = pc * weight) |>
+      select(-weight)
 
     if (input$weight) {
-      sa_long <- sa |>
-        merge(assumptions_val()) |>
-        mutate(pc = pc * weight) |>
-        select(-weight) |>
-        uncount(weights = round(pc)) |>
-        make_long(source, target)
+      sa_weight <- sa_weights |> uncount(weights = round(pc))
     } else {
-      sa_long <- sa |>
-        uncount(weights = round(value)) |>
-        make_long(source, target)
+      sa_weight <- sa |>
+        uncount(weights = round(value))
     }
-
+    sa_long = sa_weight |> make_long(source, target)
     if (nrow(sa_long) == 0) {
       return(NULL)
     }
@@ -221,17 +219,42 @@ server <- function(input, output, session) {
         node = factor(node, levels = final_order),
         next_node = factor(next_node, levels = final_order)
       )
-    return(df)
+    hold = list("df" = df, "sa_weights" = sa_weights)
+    return(hold)
   })
 
   output$sankeyPlot <- renderPlot(
     {
-      df <- plot_data()
-
+      hold <- plot_data()
+      sa_labels = hold[["sa_weights"]] |>
+        summarise(pc = sum(pc), .by = target) |>
+        filter(pc > 0) |>
+        mutate(
+          pc = paste0(target, sprintf(" %.1f", pc / sum(pc) * 100), "%")
+        ) |>
+        rename(label = pc, node = target)
       if (is.null(df)) {
         return(NULL)
       }
-
+      av_pc = assumptions_val() |>
+        mutate(
+          pc = weight / sum(weight),
+          label = paste0(source, sprintf(" %.1f", pc / sum(pc) * 100), "%")
+        ) |>
+        select("node" = source, label)
+      if (input$pc_label) {
+        df <- hold[["df"]] |>
+          merge(av_pc, by = "node", sort = F) |>
+          merge(sa_labels, by = "node", sort = F) |>
+          mutate(
+            display_label = if_else(x == "source", label.x, label.y)
+          )
+      } else {
+        df <- hold[["df"]] |>
+          mutate(
+            display_label = node
+          )
+      }
       p <- ggplot(
         df,
         aes(
@@ -240,7 +263,7 @@ server <- function(input, output, session) {
           node = node,
           next_node = next_node,
           fill = factor(node),
-          label = node
+          label = display_label
         )
       ) +
         geom_sankey(flow.alpha = 0.5, node.color = 1) +
