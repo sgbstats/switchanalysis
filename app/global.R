@@ -8,6 +8,8 @@ require(shinythemes)
 require(shinyjs)
 require(reactable)
 require(markdown)
+library(glue)
+
 options(shiny.autoreload.legacy_warning = FALSE)
 source("parse_connect_crap.R")
 source("parse_connect_xlsx.R")
