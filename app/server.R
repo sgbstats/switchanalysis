@@ -173,10 +173,10 @@ server <- function(input, output, session) {
     sa <- sa_data |>
       summarise(
         value = sum(value, na.rm = TRUE),
-        pc = sum(pc, na.rm = TRUE),
         .by = c("source", "target")
       ) |>
-      drop_na(pc)
+      drop_na(value) |>
+      mutate(pc = round(1000 * value / sum(value)), .by = c("source"))
 
     if (is.null(sa)) {
       return(NULL)
@@ -226,7 +226,6 @@ server <- function(input, output, session) {
   output$sankeyPlot <- renderPlot(
     {
       hold <- plot_data()
-      df = hold[["df"]]
       sa_labels = hold[["sa_weights"]] |>
         summarise(pc = sum(pc), .by = target) |>
         filter(pc > 0) |>
@@ -237,13 +236,25 @@ server <- function(input, output, session) {
       if (is.null(df)) {
         return(NULL)
       }
-
-      df <- df |>
-        left_join(sa_labels, by = "node") |>
+      av_pc = assumptions_val() |>
         mutate(
-          display_label = if_else(x == "source", node, label)
-        )
-
+          pc = weight / sum(weight),
+          label = paste0(source, sprintf(" %.1f", pc / sum(pc) * 100), "%")
+        ) |>
+        select("node" = source, label)
+      if (input$pc_label) {
+        df <- hold[["df"]] |>
+          left_join(av_pc, by = "node") |>
+          left_join(sa_labels, by = "node") |>
+          mutate(
+            display_label = if_else(x == "source", label.x, label.y)
+          )
+      } else {
+        df <- hold[["df"]] |>
+          mutate(
+            display_label = node
+          )
+      }
       p <- ggplot(
         df,
         aes(

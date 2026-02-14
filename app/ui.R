@@ -101,6 +101,7 @@ ui <- navbarPage(
             ),
             uiOutput("crosstab_filter_ui"),
             checkboxInput("weight", "Weighted diagram", value = TRUE),
+            checkboxInput("pc_label", "Show % on diagram", value = FALSE),
             conditionalPanel(
               "input.weight == true",
               tags$h4("Assumptions"),
