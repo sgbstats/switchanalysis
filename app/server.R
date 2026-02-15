@@ -184,7 +184,8 @@ server <- function(input, output, session) {
     sa_weights <- sa |>
       merge(assumptions_val()) |>
       mutate(pc = pc * weight) |>
-      select(-weight)
+      select(-weight) |>
+      mutate(pc = replace_na(pc, 0))
 
     if (input$weight) {
       sa_weight <- sa_weights |> uncount(weights = round(pc))
@@ -232,23 +233,30 @@ server <- function(input, output, session) {
         mutate(
           pc = paste0(target, sprintf(" %.1f", pc / sum(pc) * 100), "%")
         ) |>
-        rename(label = pc, node = target)
+        mutate(x = "target") |>
+        rename(display_label = pc, node = target) |>
+        select(node, display_label, x)
+
       if (is.null(df)) {
         return(NULL)
       }
       av_pc = assumptions_val() |>
         mutate(
           pc = weight / sum(weight),
-          label = paste0(source, sprintf(" %.1f", pc / sum(pc) * 100), "%")
+          # was going to add percentage labels to the source nodes but it looked weird, so just showing the source name instead
+          # display_label = paste0(
+          #   source,
+          #   sprintf(" %.1f", pc / sum(pc) * 100),
+          #   "%"
+          # )
+          display_label = source
         ) |>
-        select("node" = source, label)
+        mutate(x = "source") |>
+        select("node" = source, display_label, x)
+
       if (input$pc_label) {
         df <- hold[["df"]] |>
-          merge(av_pc, by = "node", sort = F) |>
-          merge(sa_labels, by = "node", sort = F) |>
-          mutate(
-            display_label = if_else(x == "source", label.x, label.y)
-          )
+          merge(rbind(av_pc, sa_labels), by = c("node", "x"), sort = F)
       } else {
         df <- hold[["df"]] |>
           mutate(

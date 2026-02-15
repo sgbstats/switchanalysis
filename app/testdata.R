@@ -25,3 +25,4 @@ assumptions_val = function() {
   )
 }
 input$weight = T
+input$pc_label = T
