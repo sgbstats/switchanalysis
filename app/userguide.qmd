@@ -90,7 +90,7 @@ In here you can add weights to the bars so that the left side is proportion to y
 
 This defaults to equal weights so you can see how each party is breaking (but remember there may be distortions due to small numbers).
 
-Currently, I would suggest using your previous election results and then in new voters, add the turnover in your ward.
+Currently, I would suggest using your previous election results and then in new voters, add the turnover in your ward. Make sure that this is new voters since the last election (especiallyt if you have all ups or off the back of a fallow year). I would also suggest you get a value from Connect that is the proportion of votes that come from new voters.
 
 While no data includes, latent voters (those that have voted before but don't have any data) and new data. It is yet to be found whether these different groups of breakdown differently.
 

@@ -55,7 +55,7 @@ ui <- navbarPage(
             "Labour",
             "Conservative",
             "Green",
-            "RefUK",
+            "Reform",
             "Independent",
             "Unaligned and No Data"
           ),
@@ -64,7 +64,7 @@ ui <- navbarPage(
             "Labour",
             "Conservative",
             "Green",
-            "RefUK",
+            "Reform",
             "Independent",
             "Unaligned and No Data",
             "Not Voting",
@@ -104,7 +104,11 @@ ui <- navbarPage(
             checkboxInput("pc_label", "Show % on diagram", value = FALSE),
             conditionalPanel(
               "input.weight == true",
-              tags$h4("Assumptions"),
+              tags$h4("Previous result"),
+              tags$p(
+                style = "color: #6c757d;",
+                "Add your weights/previous results here. Use percentages from the last election and approximately the proportion of new voters in the last column. Weights do not need to to sum to 100%."
+              ),
               div(
                 class = "inline-numeric-inputs",
                 numericInput("lib_dem_assumption", "Lib Dem", 1),

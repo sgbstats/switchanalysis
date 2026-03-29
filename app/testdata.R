@@ -1,12 +1,14 @@
 input = list()
-input$file1$datapath = "examples/DW_2022_2025MPID.xls"
+input$file1$datapath = "C:\\Users\\80010008\\Downloads\\DemographicsNew (1).xls"
+
+#"examples/DW_2022_2025MPID.xls"
 input$remove_unknowns = T
 input$source_party = c(
   "Lib Dem",
   "Labour",
   "Conservative",
   "Green",
-  "RefUK",
+  "Reform",
   "Independent",
   "Unaligned and No Data"
 )
@@ -26,3 +28,4 @@ assumptions_val = function() {
 }
 input$weight = T
 input$pc_label = T
+input$crosstab_filter = "Didsbury East"

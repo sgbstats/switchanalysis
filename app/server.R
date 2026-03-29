@@ -1,3 +1,7 @@
+require(shinyWidgets)
+require(shiny)
+require(reactable)
+
 server <- function(input, output, session) {
   output$crosstab_filter_ui <- renderUI({
     sa_raw <- base_data()
@@ -15,7 +19,7 @@ server <- function(input, output, session) {
         "Labour",
         "Conservative",
         "Green",
-        "RefUK",
+        "Reform",
         "Independent",
         "Unaligned and No Data",
         "Not Voting",
@@ -69,7 +73,7 @@ server <- function(input, output, session) {
       select(-any_of(contains("%"))) |>
       select(-any_of(contains("..."))) |>
       pivot_longer(
-        cols = -any_of(crosstabs_names),
+        cols = -all_of(crosstabs_names),
         names_to = "target",
         values_to = "value"
       ) |>
@@ -86,7 +90,7 @@ server <- function(input, output, session) {
           grepl("Lab", source) ~ "Labour",
           grepl("Con", source) ~ "Conservative",
           grepl("Green", source) ~ "Green",
-          grepl("Ref|UKIP|BNP|Nat", source) ~ "RefUK",
+          grepl("Ref|UKIP|BNP|Nat", source) ~ "Reform",
           grepl("Ind", source) ~ "Independent",
           TRUE ~ "Unaligned and No Data"
         ),
@@ -97,7 +101,7 @@ server <- function(input, output, session) {
           grepl("Lab", target) ~ "Labour",
           grepl("Con", target) ~ "Conservative",
           grepl("Green", target) ~ "Green",
-          grepl("Reform|UKIP|BNP|Nat", target) ~ "RefUK",
+          grepl("Reform|UKIP|BNP|Nat", target) ~ "Reform",
           grepl("Ind", target) ~ "Independent",
           grepl("Not Voting", target) ~ "Not Voting",
           TRUE ~ "Unknown"
@@ -203,7 +207,7 @@ server <- function(input, output, session) {
       "Labour",
       "Conservative",
       "Green",
-      "RefUK",
+      "Reform",
       "Independent",
       "Unaligned and No Data",
       "Unknown",
@@ -288,7 +292,7 @@ server <- function(input, output, session) {
             "Labour" = "#E4003B",
             "Conservative" = "#0087DC",
             "Green" = "#00a85a",
-            "RefUK" = "#00bed6",
+            "Reform" = "#00bed6",
             "Unaligned and No Data" = "#888888",
             "Unknown" = "#888888",
             "Not Voting" = "#444444",
@@ -365,7 +369,7 @@ server <- function(input, output, session) {
         "Labour",
         "Conservative",
         "Green",
-        "RefUK",
+        "Reform",
         "Independent",
         "Others",
         "Unaligned and No Data",
