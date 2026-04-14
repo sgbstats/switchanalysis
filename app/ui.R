@@ -102,6 +102,7 @@ ui <- navbarPage(
             uiOutput("crosstab_filter_ui"),
             checkboxInput("weight", "Weighted diagram", value = TRUE),
             checkboxInput("pc_label", "Show % on diagram", value = FALSE),
+
             conditionalPanel(
               "input.weight == true",
               tags$h4("Previous result"),
@@ -119,7 +120,8 @@ ui <- navbarPage(
                 numericInput("independent_assumption", "Independent", 1),
                 numericInput("unknown_assumption", "New voters", 1)
               ),
-              actionButton("update_assumptions", "Update Assumptions")
+              actionButton("update_assumptions", "Update Assumptions"),
+              downloadButton("download_sankey_plot", "Download plot")
             ),
             plotOutput("sankeyPlot", height = "600px", width = "800px")
           )

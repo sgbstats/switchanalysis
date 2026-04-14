@@ -10,6 +10,7 @@ server <- function(input, output, session) {
       selectInput("crosstab_filter", "Crosstab 1", choices = choices)
     }
   })
+
   observeEvent(input$exclude_all, {
     if (input$exclude_all) {
       prs = character(0)
@@ -30,7 +31,7 @@ server <- function(input, output, session) {
   })
 
   base_data_raw <- reactive({
-    req(input$file1) # require file to be uploaded
+    req(input$file1)
 
     sa_raw <- tryCatch(
       {
@@ -228,82 +229,94 @@ server <- function(input, output, session) {
     return(hold)
   })
 
+  sankey_plot <- reactive({
+    hold <- plot_data()
+    req(hold)
+
+    sa_labels = hold[["sa_weights"]] |>
+      summarise(pc = sum(pc), .by = target) |>
+      filter(pc > 0) |>
+      mutate(
+        pc = paste0(target, sprintf(" %.1f", pc / sum(pc) * 100), "%")
+      ) |>
+      mutate(x = "target") |>
+      rename(display_label = pc, node = target) |>
+      select(node, display_label, x)
+
+    av_pc = assumptions_val() |>
+      mutate(
+        pc = weight / sum(weight),
+        display_label = source
+      ) |>
+      mutate(x = "source") |>
+      select("node" = source, display_label, x)
+
+    if (input$pc_label) {
+      df <- hold[["df"]] |>
+        merge(rbind(av_pc, sa_labels), by = c("node", "x"), sort = FALSE)
+    } else {
+      df <- hold[["df"]] |>
+        mutate(display_label = node)
+    }
+
+    ggplot(
+      df,
+      aes(
+        x = x,
+        next_x = next_x,
+        node = node,
+        next_node = next_node,
+        fill = factor(node),
+        label = display_label
+      )
+    ) +
+      geom_sankey(flow.alpha = 0.5, node.color = 1) +
+      geom_sankey_label(linewidth = 0, color = "white") +
+      theme_sankey(base_size = 16) +
+      theme(
+        legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank()
+      ) +
+      scale_fill_manual(
+        values = c(
+          "Lib Dem" = "#ff6400",
+          "Labour" = "#E4003B",
+          "Conservative" = "#0087DC",
+          "Green" = "#00a85a",
+          "Reform" = "#00bed6",
+          "Unaligned and No Data" = "#888888",
+          "Unknown" = "#888888",
+          "Not Voting" = "#444444",
+          "Not Lib Dem" = "#444444"
+        )
+      )
+  })
+
   output$sankeyPlot <- renderPlot(
     {
-      hold <- plot_data()
-      sa_labels = hold[["sa_weights"]] |>
-        summarise(pc = sum(pc), .by = target) |>
-        filter(pc > 0) |>
-        mutate(
-          pc = paste0(target, sprintf(" %.1f", pc / sum(pc) * 100), "%")
-        ) |>
-        mutate(x = "target") |>
-        rename(display_label = pc, node = target) |>
-        select(node, display_label, x)
-
-      if (is.null(df)) {
-        return(NULL)
-      }
-      av_pc = assumptions_val() |>
-        mutate(
-          pc = weight / sum(weight),
-          # was going to add percentage labels to the source nodes but it looked weird, so just showing the source name instead
-          # display_label = paste0(
-          #   source,
-          #   sprintf(" %.1f", pc / sum(pc) * 100),
-          #   "%"
-          # )
-          display_label = source
-        ) |>
-        mutate(x = "source") |>
-        select("node" = source, display_label, x)
-
-      if (input$pc_label) {
-        df <- hold[["df"]] |>
-          merge(rbind(av_pc, sa_labels), by = c("node", "x"), sort = F)
-      } else {
-        df <- hold[["df"]] |>
-          mutate(
-            display_label = node
-          )
-      }
-      p <- ggplot(
-        df,
-        aes(
-          x = x,
-          next_x = next_x,
-          node = node,
-          next_node = next_node,
-          fill = factor(node),
-          label = display_label
-        )
-      ) +
-        geom_sankey(flow.alpha = 0.5, node.color = 1) +
-        geom_sankey_label(linewidth = 0, color = "white") +
-        theme_sankey(base_size = 16) +
-        theme(
-          legend.position = "none",
-          axis.title.x = element_blank(),
-          axis.text.x = element_blank()
-        ) +
-        scale_fill_manual(
-          values = c(
-            "Lib Dem" = "#ff6400",
-            "Labour" = "#E4003B",
-            "Conservative" = "#0087DC",
-            "Green" = "#00a85a",
-            "Reform" = "#00bed6",
-            "Unaligned and No Data" = "#888888",
-            "Unknown" = "#888888",
-            "Not Voting" = "#444444",
-            "Not Lib Dem" = "#444444"
-          )
-        )
-
-      p
+      sankey_plot()
     },
     bg = "transparent"
   )
+
+  output$download_sankey_plot <- downloadHandler(
+    filename = function() {
+      "switchanalysis_plot.png"
+    },
+    content = function(file) {
+      ggplot2::ggsave(
+        filename = file,
+        plot = sankey_plot(),
+        device = "png",
+        width = 12,
+        height = 8,
+        dpi = 300,
+        bg = "transparent"
+      )
+    }
+  )
+
   table_data <- reactive({
     sa <- base_data()
     if (is.null(sa)) {
@@ -355,14 +368,12 @@ server <- function(input, output, session) {
       return()
     }
 
-    # Define grouping and numeric columns
     crosstabs_names <-
       names(sa_wide)[grepl("crosstab", names(sa_wide))]
     grouping_cols <- c(crosstabs_names, "source", "source1")
     numeric_cols <-
       setdiff(names(sa_wide), c(grouping_cols, "Total"))
 
-    # Define column order
     desired_order <-
       c(
         "Lib Dem",
@@ -381,7 +392,6 @@ server <- function(input, output, session) {
     other_nodes <- setdiff(all_nodes, desired_order)
     final_order <- unique(c(numeric_cols, desired_order, other_nodes))
 
-    # Base column definitions for grouping columns
     cols_list <- list(
       source = colDef(name = "Party"),
       source1 = colDef(name = "Subgroup")
@@ -391,9 +401,7 @@ server <- function(input, output, session) {
         colDef(name = str_to_title(sub("crosstab", "Crosstab ", col)))
     }
 
-    # Define numeric columns
     if (isTRUE(input$raw_pc)) {
-      # JS function for percentage cells
       percent_js_func <- JS(
         "function(cellInfo) {
             var total = cellInfo.row.Total;
@@ -412,22 +420,18 @@ server <- function(input, output, session) {
       })
       names(numeric_col_defs) <- numeric_cols
       cols_list <- c(cols_list, numeric_col_defs)
-      # Hide Total column in percent view
       cols_list$Total <- colDef(show = FALSE, aggregate = "sum")
     } else {
-      # For raw view, just ensure they are summed
       numeric_col_defs <-
         lapply(numeric_cols, function(col) {
           colDef(aggregate = "sum")
         })
       names(numeric_col_defs) <- numeric_cols
       cols_list <- c(cols_list, numeric_col_defs)
-      # Show Total column in raw view
       cols_list$Total <-
         colDef(show = FALSE, aggregate = "sum")
     }
 
-    # Set up grouping
     group_by_cols <-
       if (isTRUE(input$expand_columns)) {
         setdiff(grouping_cols, "source1")
