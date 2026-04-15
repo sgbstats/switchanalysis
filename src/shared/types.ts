@@ -3,7 +3,7 @@ import type { DEFAULT_ASSUMPTIONS, PARTY_OPTIONS, WEIGHTED_PARTIES } from "@/sha
 export type PartyOption = (typeof PARTY_OPTIONS)[number];
 export type WeightedParty = (typeof WEIGHTED_PARTIES)[number];
 export type AssumptionWeights = Partial<Record<WeightedParty, number>>;
-export type ParsedCell = string | number | boolean | Date | typeof Date | null;
+export type ParsedCell = string | number | boolean | Date | null;
 
 export interface ParsedWorkbookRow {
   [key: string]: ParsedCell;

@@ -2,9 +2,29 @@ import readXlsxFile from "read-excel-file/browser";
 import { matrixToWorkbook } from "@/lib/parsers/matrix";
 import type { ParsedCell } from "@/shared/types";
 
+function decodeEntities(value: string) {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+function stripTags(value: string) {
+  return decodeEntities(
+    value
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<[^>]+>/g, "")
+      .trim(),
+  );
+}
+
 function decodeHtml(buffer: ArrayBuffer) {
-  const decoders = ["utf-8", "utf-16le", "windows-1252"];
-  for (const encoding of decoders) {
+  // Raw Connect .xls exports are really HTML files; these encodings cover the
+  // UTF-8/UTF-16LE and legacy Windows code-page variants we found in sample files.
+  for (const encoding of ["utf-8", "utf-16le", "windows-1252"]) {
     try {
       const text = new TextDecoder(encoding).decode(buffer);
       if (/<table|<html/i.test(text.replace(/\u0000/g, ""))) return text;
@@ -16,12 +36,17 @@ function decodeHtml(buffer: ArrayBuffer) {
 }
 
 export function htmlTableToMatrix(html: string): ParsedCell[][] {
-  const doc = new DOMParser().parseFromString(html.replace(/\u0000/g, ""), "text/html");
-  const table = doc.querySelector("table");
-  if (!table) throw new Error("Could not find a table in the uploaded .xls file.");
-  return Array.from(table.querySelectorAll("tr")).map((row) =>
-    Array.from(row.querySelectorAll("th, td")).map((cell) => cell.textContent?.trim() ?? null),
-  );
+  const normalized = html.replace(/\u0000/g, "");
+  const tableMatch = normalized.match(/<table\b[\s\S]*?<\/table>/i);
+  if (!tableMatch) throw new Error("Could not find a table in the uploaded .xls file.");
+
+  const rows = tableMatch[0].match(/<tr\b[\s\S]*?<\/tr>/gi);
+  if (!rows?.length) throw new Error("The uploaded .xls table does not contain any rows.");
+
+  return rows.map((rowHtml) => {
+    const cells = Array.from(rowHtml.matchAll(/<(td|th)\b[^>]*>([\s\S]*?)<\/\1>/gi));
+    return cells.map((cell) => stripTags(cell[2]) || null);
+  });
 }
 
 export async function parseSwitchFile(file: File) {
@@ -31,7 +56,7 @@ export async function parseSwitchFile(file: File) {
     const workbook = await readXlsxFile(file);
     const firstSheet = workbook[0]?.data;
     if (!firstSheet) throw new Error("The uploaded workbook does not contain any sheets.");
-    return matrixToWorkbook(firstSheet);
+    return matrixToWorkbook(firstSheet as unknown as ParsedCell[][]);
   }
 
   if (extension === "xls") {
