@@ -12,13 +12,35 @@ function normalizeSheetCell(value: unknown): ParsedCell {
 }
 
 function stripTags(value: string) {
-  return value
-    .replace(/&nbsp;/gi, " ")
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .trim();
+  let result = "";
+  let tag = "";
+  let inTag = false;
+
+  for (const char of value) {
+    if (inTag) {
+      if (char === ">") {
+        const normalizedTag = tag.trim().toLowerCase();
+        if (normalizedTag.startsWith("br")) {
+          result += "\n";
+        }
+        inTag = false;
+        tag = "";
+      } else {
+        tag += char;
+      }
+      continue;
+    }
+
+    if (char === "<") {
+      inTag = true;
+      tag = "";
+      continue;
+    }
+
+    result += char;
+  }
+
+  return result.replace(/&nbsp;/gi, " ").trim();
 }
 
 function decodeHtml(buffer: ArrayBuffer) {
