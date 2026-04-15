@@ -230,3 +230,68 @@ than Consider Yes.
   Dems but never the other way round. This system also applies to other
   parties. Nat instead of a colour indicates Reform (and other
   nationalist parties).
+
+
+## TypeScript web app
+
+This repository now also contains a browser-first Next.js + TypeScript rewrite of the Switch Analysis Shiny app.
+
+### Project structure
+
+```text
+.
+├── PARITY_CHECKLIST.md
+├── app/                     # Original Shiny source of truth
+├── public/images/           # Static assets reused by the web app
+├── src/
+│   ├── app/                 # Next.js routes and pages
+│   │   └── api/             # Optional API wrappers
+│   ├── components/          # UI layer
+│   ├── lib/                 # Logic + parsing layer
+│   └── shared/              # Shared types and validation
+├── .env.example
+├── package.json
+├── tsconfig.json
+└── vitest.config.ts
+```
+
+### Run guide
+
+1. Install dependencies
+
+   ```bash
+   npm install
+   ```
+
+2. Start the development server
+
+   ```bash
+   npm run dev
+   ```
+
+3. Run linting and tests
+
+   ```bash
+   npm run lint
+   npm run test:run
+   ```
+
+4. Build for production
+
+   ```bash
+   npm run build
+   ```
+
+5. Start the production server
+
+   ```bash
+   npm run start
+   ```
+
+### Environment variables
+
+Copy `.env.example` to `.env.local` and adjust the public values if needed.
+
+### Parity and limitations
+
+See `PARITY_CHECKLIST.md` for the Shiny-to-TypeScript mapping and known differences.
