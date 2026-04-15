@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { ResponsiveSankey } from "@nivo/sankey";
 import type { SankeyModel } from "@/shared/types";
 
@@ -54,7 +54,7 @@ export function SankeyDiagram({ data, onReady }: SankeyDiagramProps) {
     [data],
   );
 
-  useMemo(() => {
+  useEffect(() => {
     if (!onReady) return;
     onReady(async () => {
       if (!ref.current) return;
