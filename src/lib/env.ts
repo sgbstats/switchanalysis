@@ -7,7 +7,7 @@ const parsedEnv = envSchema.safeParse({
 });
 
 if (!parsedEnv.success) {
-  throw new Error(`Invalid public environment configuration: ${parsedEnv.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`);
+  throw new Error(`Invalid public environment configuration. Update .env.local from .env.example: ${parsedEnv.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`);
 }
 
 export const env = parsedEnv.data;

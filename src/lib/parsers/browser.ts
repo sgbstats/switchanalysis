@@ -16,6 +16,8 @@ function stripTags(value: string) {
     .replace(/&nbsp;/gi, " ")
     .replace(/<br\s*\/?>/gi, "\n")
     .replace(/<[^>]+>/g, "")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
     .trim();
 }
 
