@@ -1,7 +1,13 @@
 import { envSchema } from "@/shared/validation";
 
-export const env = envSchema.parse({
+const parsedEnv = envSchema.safeParse({
   NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
   NEXT_PUBLIC_GITHUB_URL: process.env.NEXT_PUBLIC_GITHUB_URL,
   NEXT_PUBLIC_TYPEFORM_URL: process.env.NEXT_PUBLIC_TYPEFORM_URL,
 });
+
+if (!parsedEnv.success) {
+  throw new Error(`Invalid public environment configuration: ${parsedEnv.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; ")}`);
+}
+
+export const env = parsedEnv.data;

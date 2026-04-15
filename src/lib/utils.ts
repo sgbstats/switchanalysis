@@ -10,7 +10,7 @@ export function titleCase(value: string) {
   return value.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function toNumber(value: string | number | boolean | Date | null | undefined) {
+export function toNumber(value: string | number | boolean | null | undefined) {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
   if (typeof value !== "string") return 0;
   const parsed = Number(value.replace(/,/g, "").trim());

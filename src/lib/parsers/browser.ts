@@ -2,23 +2,21 @@ import readXlsxFile from "read-excel-file/browser";
 import { matrixToWorkbook } from "@/lib/parsers/matrix";
 import type { ParsedCell } from "@/shared/types";
 
-function decodeEntities(value: string) {
-  return value
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">");
+function normalizeSheetCell(value: unknown): ParsedCell {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    return value;
+  }
+  if (value instanceof Date) return value.toISOString();
+  return String(value);
 }
 
 function stripTags(value: string) {
-  return decodeEntities(
-    value
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<[^>]+>/g, "")
-      .trim(),
-  );
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<[^>]+>/g, "")
+    .trim();
 }
 
 function decodeHtml(buffer: ArrayBuffer) {
@@ -56,7 +54,7 @@ export async function parseSwitchFile(file: File) {
     const workbook = await readXlsxFile(file);
     const firstSheet = workbook[0]?.data;
     if (!firstSheet) throw new Error("The uploaded workbook does not contain any sheets.");
-    return matrixToWorkbook(firstSheet as unknown as ParsedCell[][]);
+    return matrixToWorkbook(firstSheet.map((row) => row.map((cell) => normalizeSheetCell(cell))));
   }
 
   if (extension === "xls") {
